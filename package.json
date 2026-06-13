@@ -1,0 +1,23 @@
+{
+  "name": "vuna-calc-striped",
+  "version": "1.0.0",
+  "description": "A modern calculator application with theme support and smart memory features",
+  "main": "assets/js/script.js",
+  "scripts": {
+    "lint": "eslint assets/js/",
+    "lint:fix": "eslint assets/js/ --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "build": "echo \"Building...\" && cp assets/js/script.js assets/js/script.min.js",
+    "precommit": "npm run lint"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "jest": "^30.4.2"
+  },
+  "jest": {
+    "setupFiles": ["<rootDir>/test/setup.js"]
+  }
+}

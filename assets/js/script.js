@@ -3,42 +3,42 @@
 // ===============================
 
 let LAST_RESULT = 0;
-var currentExpression = "";
+var currentExpression = '';
 
 // ------------------------------
 // Theme Toggle Logic
 // ------------------------------
 function toggleTheme() {
   const body = document.body;
-  const btn = document.getElementById("theme-toggle");
+  const btn = document.getElementById('theme-toggle');
 
-  body.classList.toggle("dark-mode");
+  body.classList.toggle('dark-mode');
 
-  if (body.classList.contains("dark-mode")) {
-    btn.innerHTML = "☀️";
-    btn.title = "Switch to light mode";
-    localStorage.setItem("theme", "dark");
+  if (body.classList.contains('dark-mode')) {
+    btn.innerHTML = '☀️';
+    btn.title = 'Switch to light mode';
+    localStorage.setItem('theme', 'dark');
   } else {
-    btn.innerHTML = "🌙";
-    btn.title = "Switch to dark mode";
-    localStorage.setItem("theme", "light");
+    btn.innerHTML = '🌙';
+    btn.title = 'Switch to dark mode';
+    localStorage.setItem('theme', 'light');
   }
 }
 
 // Set theme on page load from localStorage
-window.addEventListener("DOMContentLoaded", function () {
-  const theme = localStorage.getItem("theme");
+window.addEventListener('DOMContentLoaded', function () {
+  const theme = localStorage.getItem('theme');
   const body = document.body;
-  const btn = document.getElementById("theme-toggle");
+  const btn = document.getElementById('theme-toggle');
 
   if (btn) {
-    if (theme === "dark") {
-      body.classList.add("dark-mode");
-      btn.innerHTML = "☀️";
-      btn.title = "Switch to light mode";
+    if (theme === 'dark') {
+      body.classList.add('dark-mode');
+      btn.innerHTML = '☀️';
+      btn.title = 'Switch to light mode';
     } else {
-      btn.innerHTML = "🌙";
-      btn.title = "Switch to dark mode";
+      btn.innerHTML = '🌙';
+      btn.title = 'Switch to dark mode';
     }
   }
 });
@@ -46,9 +46,9 @@ window.addEventListener("DOMContentLoaded", function () {
 // ------------------------------
 // Calculator State
 // ------------------------------
-let left = "";
-let operator = "";
-let right = "";
+let left = '';
+let operator = '';
+let right = '';
 let steps = [];
 const MAX_STEPS = 6;
 
@@ -71,8 +71,8 @@ function backspace() {
 }
 
 function operatorToResult(value) {
-  if (value === "^") {
-    currentExpression += "**";
+  if (value === '^') {
+    currentExpression += '**';
   } else {
     currentExpression += value;
   }
@@ -80,23 +80,48 @@ function operatorToResult(value) {
 }
 
 function clearResult() {
-  currentExpression = "";
+  currentExpression = '';
   updateResult();
 }
 
 
 function normalizeExpression(expr) {
   return expr
-    .replace(/asin\(/g, "asinDeg(")
-    .replace(/acos\(/g, "acosDeg(")
-    .replace(/atan\(/g, "atanDeg(")
-    .replace(/sin\(/g, "sinDeg(")
-    .replace(/cos\(/g, "cosDeg(")
-    .replace(/tan\(/g, "tanDeg(")
-    .replace(/asinh\(/g, "asinh(")
-    .replace(/sinh\(/g, "sinh(")
-    .replace(/\be\b/g, "Math.E")
-    .replace(/\bpi\b/g, "Math.PI");
+    .replace(/asin\(/g, 'asinDeg(')
+    .replace(/acos\(/g, 'acosDeg(')
+    .replace(/atan\(/g, 'atanDeg(')
+    .replace(/sin\(/g, 'sinDeg(')
+    .replace(/cos\(/g, 'cosDeg(')
+    .replace(/tan\(/g, 'tanDeg(')
+    .replace(/asinh\(/g, 'asinh(')
+    .replace(/sinh\(/g, 'sinh(')
+    .replace(/\be\b/g, 'Math.E')
+    .replace(/\bpi\b/g, 'Math.PI');
+}
+
+function calculateExpression(expression) {
+  try {
+
+    let normalizedExpression = normalizeExpression(expression);
+
+    // 🧠 Replace "ans" with last result automatically
+    normalizedExpression = normalizedExpression.replace(
+      /\bans\b/gi,
+      LAST_RESULT
+    );
+
+    // Calculate result
+    let result = eval(normalizedExpression);
+    console.log('Calculated result for expression:', expression, '->', result);
+
+    if (isNaN(result) || !isFinite(result)) {
+      throw new Error();
+    }
+
+    return result;
+  } catch (e) {
+    return 'Error';
+  }
 }
 
 function percentToResult() {
@@ -132,7 +157,7 @@ function percentToResult() {
   }
 
   // 🔥 ADD THIS LINE
-  currentExpression += "*";
+  currentExpression += '*';
 
   updateResult();
 }
@@ -140,48 +165,29 @@ function percentToResult() {
 // ------------------------------
 // Calculate Result
 // ------------------------------
-function calculateExpression(expression) {
-  try {
-   
-    let normalizedExpression = normalizeExpression(expression);
-
-    // 🧠 Replace "ans" with last result automatically
-    normalizedExpression = normalizedExpression.replace(
-      /\bans\b/gi,
-      LAST_RESULT,
-    );
-
-    // Calculate result
-    let result = eval(normalizedExpression);
-    console.log("Calculated result for expression:", expression, "->", result);
- 
-    if (isNaN(result) || !isFinite(result)) {
-      throw new Error();
-    }
-
-    return result;
-  } catch (e) {
-    return "Error";
-  }
-}
 function calculateResult() {
   if (!currentExpression) return;
-    const display = document.getElementById("result"); 
-    // Calculate result
-    let result = calculateExpression(currentExpression);
-    result = String(result);
+  const display = document.getElementById('result');
+  // Calculate result
+  let result = calculateExpression(currentExpression);
+  result = String(result);
 
-    // Save result for future expressions
-    LAST_RESULT = result;
+  // Save result for future expressions
+  LAST_RESULT = result;
 
-    // Display normally
-    display.value = result;
+  // Display normally
+  display.value = result;
 
-    currentExpression = result;
-    updateResult();
+  currentExpression = result;
+  updateResult();
 }
 
 
 function updateResult() {
-  document.getElementById("result").value = currentExpression || "0";
+  document.getElementById('result').value = currentExpression || '0';
 }
+
+module.exports = {
+  calculateExpression,
+  normalizeExpression
+};
