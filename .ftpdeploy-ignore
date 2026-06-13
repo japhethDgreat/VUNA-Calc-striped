@@ -1,0 +1,12 @@
+.git/
+node_modules/
+test/
+.github/
+.eslintrc.json
+.prettierrc
+.dockerignore
+.gitignore
+Dockerfile
+nginx.conf
+package.json
+package-lock.json
