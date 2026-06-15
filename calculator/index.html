@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculator</title>
+  <link rel="stylesheet" href="../assets/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <style>
+    .calc-nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      padding: 0.8rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    .calc-nav .nav-home {
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #495057;
+      transition: color 0.2s;
+    }
+    .calc-nav .nav-home:hover { color: #e10600; }
+    .calc-nav .nav-home span { color: #e10600; }
+
+    .mode-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.2rem;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 2px solid #e9ecef;
+    }
+    .mode-tab {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border: none;
+      background: #f8f9fa;
+      color: #6c757d;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-tab.active {
+      background: #0d6efd;
+      color: #fff;
+    }
+    .mode-tab:hover:not(.active) { background: #e9ecef; color: #495057; }
+
+    .mode-panel { display: none; }
+    .mode-panel.active { display: block; }
+
+    /* ── Lap Timer ── */
+    .timer-display {
+      text-align: center;
+      padding: 2rem 0 1rem;
+    }
+    .timer-time {
+      font-size: 3.2rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+      color: #212529;
+    }
+    .timer-label {
+      font-size: 0.7rem;
+      color: #adb5bd;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-top: 0.3rem;
+    }
+    .timer-controls {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: center;
+      margin: 1.2rem 0;
+    }
+    .timer-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .timer-btn:hover { transform: scale(1.08); }
+    .timer-btn-start {
+      background: #198754;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(25, 135, 84, 0.3);
+    }
+    .timer-btn-lap {
+      background: #0d6efd;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(13, 110, 253, 0.3);
+    }
+    .timer-btn-stop {
+      background: #dc3545;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(220, 53, 69, 0.3);
+    }
+    .timer-btn-reset {
+      background: #6c757d;
+      color: #fff;
+    }
+    .timer-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .lap-list {
+      max-height: 260px;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+    }
+    .lap-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 1rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      transition: background 0.15s;
+    }
+    .lap-item:nth-child(odd) { background: #f8f9fa; }
+    .lap-item:hover { background: #e9ecef; }
+    .lap-num {
+      font-weight: 700;
+      color: #0d6efd;
+      min-width: 36px;
+    }
+    .lap-split {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: #212529;
+    }
+    .lap-total {
+      font-variant-numeric: tabular-nums;
+      color: #6c757d;
+      font-size: 0.82rem;
+    }
+    .lap-best { background: #d1e7dd !important; }
+    .lap-worst { background: #f8d7da !important; }
+
+    .lap-summary {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid #e9ecef;
+    }
+    .lap-summary-item {
+      text-align: center;
+    }
+    .lap-summary-val {
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: #212529;
+    }
+    .lap-summary-lbl {
+      font-size: 0.65rem;
+      color: #adb5bd;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .lap-empty {
+      text-align: center;
+      padding: 2rem;
+      color: #adb5bd;
+      font-size: 0.85rem;
+    }
+
+    body.dark-mode .calc-nav { background: rgba(30, 30, 30, 0.85); border-color: rgba(255,255,255,0.06); }
+    body.dark-mode .calc-nav .nav-home { color: rgba(255,255,255,0.6); }
+    body.dark-mode .mode-tabs { border-color: #444; }
+    body.dark-mode .mode-tab { background: #333; color: #aaa; }
+    body.dark-mode .mode-tab.active { background: #0d6efd; color: #fff; }
+    body.dark-mode .timer-time { color: #e0e0e0; }
+    body.dark-mode .lap-item:nth-child(odd) { background: #2a2a2a; }
+    body.dark-mode .lap-item:hover { background: #333; }
+    body.dark-mode .lap-split { color: #e0e0e0; }
+    body.dark-mode .lap-summary-val { color: #e0e0e0; }
+  </style>
+</head>
+
+<body>
+  <!-- Nav -->
+  <nav class="calc-nav">
+    <a href="/" class="nav-home">VUNA<span>.</span> Home</a>
+    <span style="font-size:0.75rem; color:#adb5bd; letter-spacing:1px; text-transform:uppercase;">Calculator</span>
+  </nav>
+
+  <!-- Theme Toggle Button -->
+  <button class="btn btn-outline-secondary theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()"
+    title="Toggle dark/light mode" style="top:70px;">
+    🌙
+  </button>
+
+  <div class="container" style="padding-top: 80px;">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-md-6 col-sm-8">
+
+        <!-- Mode Tabs -->
+        <div class="mode-tabs">
+          <button class="mode-tab active" onclick="switchMode('calc')">Calculator</button>
+          <button class="mode-tab" onclick="switchMode('timer')">Lap Timer</button>
+        </div>
+
+        <!-- Calculator Panel -->
+        <div class="mode-panel active" id="panel-calc">
+          <div class="border border-dotted border-3 rounded-3 p-3 mb-4 bg-white bg-opacity-50">
+            <h4 class="text-center group-header mb-0">VUNA CALCULATOR</h4>
+            <p class="text-center text-small text-muted">
+              <i>Created by set 2025/26 Software Engineering</i>
+            </p>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card calculator-card">
+                <div class="card-body p-4">
+                  <div class="calculator">
+                    <div class="display-container">
+                      <input type="text" class="form-control" id="result" placeholder="0" disabled />
+                    </div>
+
+                    <div class="btn-grid">
+                      <button class="btn btn-light" onclick="bracketToResult('(')">(</button>
+                      <button class="btn btn-light" onclick="bracketToResult(')')">)</button>
+                      <button class="btn btn-light" onclick="backspace()">←</button>
+
+                      <button class="btn btn-action" onclick="clearResult()">AC</button>
+
+                      <button class="btn btn-light" onclick="appendToResult(7)">7</button>
+                      <button class="btn btn-light" onclick="appendToResult(8)">8</button>
+                      <button class="btn btn-light" onclick="appendToResult(9)">9</button>
+
+                      <button class="btn btn-operator" onclick="operatorToResult('/')">÷</button>
+                      <button class="btn btn-light" onclick="appendToResult(4)">4</button>
+                      <button class="btn btn-light" onclick="appendToResult(5)">5</button>
+                      <button class="btn btn-light" onclick="appendToResult(6)">6</button>
+
+                      <button class="btn btn-operator" onclick="operatorToResult('*')">×</button>
+                      <button class="btn btn-light" onclick="appendToResult(1)">1</button>
+                      <button class="btn btn-light" onclick="appendToResult(2)">2</button>
+                      <button class="btn btn-light" onclick="appendToResult(3)">3</button>
+
+                      <button class="btn btn-operator" onclick="operatorToResult('+')">+</button>
+                      <button class="btn btn-light" onclick="appendToResult('.')">.</button>
+                      <button class="btn btn-light" onclick="appendToResult(0)">0</button>
+                      <button class="btn btn-operator" onclick="percentToResult('%')">%</button>
+
+                      <button class="btn btn-operator" onclick="operatorToResult('-')">−</button>
+
+                      <button class="btn btn-equals" onclick="calculateResult()" style="grid-column: span 4;">=</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lap Timer Panel -->
+        <div class="mode-panel" id="panel-timer">
+          <div class="card calculator-card">
+            <div class="card-body p-4">
+              <h4 class="text-center group-header mb-2" style="font-size:1rem;">LAP TIMER</h4>
+
+              <div class="timer-display">
+                <div class="timer-time" id="timer-display">00:00.000</div>
+                <div class="timer-label">Elapsed Time</div>
+              </div>
+
+              <div class="timer-controls">
+                <button class="timer-btn timer-btn-start" id="btn-start" onclick="timerStart()">▶</button>
+                <button class="timer-btn timer-btn-lap" id="btn-lap" onclick="timerLap()" disabled>⏱</button>
+                <button class="timer-btn timer-btn-stop" id="btn-stop" onclick="timerStop()" disabled>■</button>
+                <button class="timer-btn timer-btn-reset" id="btn-reset" onclick="timerReset()">↺</button>
+              </div>
+
+              <div class="lap-list" id="lap-list">
+                <div class="lap-empty">Press start to begin timing</div>
+              </div>
+
+              <div class="lap-summary" id="lap-summary" style="display:none;">
+                <div class="lap-summary-item">
+                  <div class="lap-summary-val" id="summary-best">—</div>
+                  <div class="lap-summary-lbl">Best Lap</div>
+                </div>
+                <div class="lap-summary-item">
+                  <div class="lap-summary-val" id="summary-worst">—</div>
+                  <div class="lap-summary-lbl">Worst Lap</div>
+                </div>
+                <div class="lap-summary-item">
+                  <div class="lap-summary-val" id="summary-avg">—</div>
+                  <div class="lap-summary-lbl">Average</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script src="../assets/js/bootstrap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+        <script src="../assets/js/script.js"></script>
+        <script>
+          // ── Mode Switching ──
+          function switchMode(mode) {
+            document.querySelectorAll('.mode-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.mode-panel').forEach(function(p) { p.classList.remove('active'); });
+            if (mode === 'calc') {
+              document.querySelectorAll('.mode-tab')[0].classList.add('active');
+              document.getElementById('panel-calc').classList.add('active');
+            } else {
+              document.querySelectorAll('.mode-tab')[1].classList.add('active');
+              document.getElementById('panel-timer').classList.add('active');
+            }
+          }
+
+          // ── Lap Timer ──
+          var timerRunning = false;
+          var timerStartTime = 0;
+          var timerElapsed = 0;
+          var timerInterval = null;
+          var lapTimes = [];
+          var lastLapTime = 0;
+
+          function formatTime(ms) {
+            var totalSec = ms / 1000;
+            var min = Math.floor(totalSec / 60);
+            var sec = Math.floor(totalSec % 60);
+            var mil = Math.floor(ms % 1000);
+            return (min < 10 ? '0' : '') + min + ':' +
+                   (sec < 10 ? '0' : '') + sec + '.' +
+                   (mil < 100 ? '0' : '') + (mil < 10 ? '0' : '') + mil;
+          }
+
+          function updateTimerDisplay() {
+            var now = performance.now();
+            var elapsed = timerElapsed + (now - timerStartTime);
+            document.getElementById('timer-display').textContent = formatTime(elapsed);
+          }
+
+          function timerStart() {
+            if (timerRunning) return;
+            timerRunning = true;
+            timerStartTime = performance.now();
+            timerInterval = setInterval(updateTimerDisplay, 17);
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-lap').disabled = false;
+            document.getElementById('btn-stop').disabled = false;
+          }
+
+          function timerStop() {
+            if (!timerRunning) return;
+            timerRunning = false;
+            clearInterval(timerInterval);
+            timerElapsed += performance.now() - timerStartTime;
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-lap').disabled = true;
+            document.getElementById('btn-stop').disabled = true;
+          }
+
+          function timerLap() {
+            if (!timerRunning) return;
+            var now = performance.now();
+            var totalElapsed = timerElapsed + (now - timerStartTime);
+            var splitTime = totalElapsed - lastLapTime;
+            lastLapTime = totalElapsed;
+            lapTimes.push({ split: splitTime, total: totalElapsed });
+            renderLaps();
+          }
+
+          function timerReset() {
+            timerRunning = false;
+            clearInterval(timerInterval);
+            timerElapsed = 0;
+            timerStartTime = 0;
+            lastLapTime = 0;
+            lapTimes = [];
+            document.getElementById('timer-display').textContent = '00:00.000';
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-lap').disabled = true;
+            document.getElementById('btn-stop').disabled = true;
+            renderLaps();
+          }
+
+          function renderLaps() {
+            var list = document.getElementById('lap-list');
+            var summary = document.getElementById('lap-summary');
+
+            if (lapTimes.length === 0) {
+              list.innerHTML = '<div class="lap-empty">Press start to begin timing</div>';
+              summary.style.display = 'none';
+              return;
+            }
+
+            var splits = lapTimes.map(function(l) { return l.split; });
+            var bestIdx = splits.indexOf(Math.min.apply(null, splits));
+            var worstIdx = splits.indexOf(Math.max.apply(null, splits));
+            var avg = splits.reduce(function(a, b) { return a + b; }, 0) / splits.length;
+
+            var html = '';
+            for (var i = lapTimes.length - 1; i >= 0; i--) {
+              var cls = '';
+              if (i === bestIdx) cls = ' lap-best';
+              if (i === worstIdx) cls = ' lap-worst';
+              html += '<div class="lap-item' + cls + '">' +
+                '<span class="lap-num">L' + (i + 1) + '</span>' +
+                '<span class="lap-split">' + formatTime(lapTimes[i].split) + '</span>' +
+                '<span class="lap-total">' + formatTime(lapTimes[i].total) + '</span>' +
+                '</div>';
+            }
+            list.innerHTML = html;
+
+            document.getElementById('summary-best').textContent = formatTime(Math.min.apply(null, splits));
+            document.getElementById('summary-worst').textContent = formatTime(Math.max.apply(null, splits));
+            document.getElementById('summary-avg').textContent = formatTime(avg);
+            summary.style.display = 'flex';
+          }
+        </script>
+        <button id="scroll-to-calculator" title="Back to Calculator">↑</button>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
